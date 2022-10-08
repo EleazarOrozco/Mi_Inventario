@@ -57,6 +57,7 @@ class Inventario {
             if (this.productos[i].codigo == codigo) {
              return this.productos[i]
             }
+           
         }
 
     }
