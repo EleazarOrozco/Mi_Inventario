@@ -12,6 +12,8 @@ let txt = document.getElementById("lista");
 let codigoE = document.getElementById("encontrado");
 let btListarInverso = document.getElementById("inverso");
 
+
+
 class Producto {
     constructor(codigo, nombre, costo, cantidad) {
         this.codigo=codigo;
@@ -24,9 +26,22 @@ class Inventario {
     constructor() {
         this.productos = []
     }
-
+    ubicacion(codigo) {
+        let i = 0;
+        while ( codigo > this.productos[i]?.codigo) {
+            i++
+        }
+        return i
+    }
     agregar(productoNuevo) {
-        this.productos.push(productoNuevo); 
+        //let ubi = this.ubicacion(productoNuevo?.codigo); esto así me lo acomoda por orden
+        // leí que te deja leer los valores de la propiedad en una cadena de objetos sin tener que
+        //validar cada referencia, si no se lo pongo me los añadé tal cual.
+        let ubi = this.ubicacion(productoNuevo.codigo);
+        for (let i = this.productos.length - 1; ubi <= i; i--) {
+            this.productos[i + 1] = this.productos[i]
+        }
+        this.productos[ubi] = productoNuevo;
         console.log(this.productos);
     }
 
@@ -37,29 +52,42 @@ class Inventario {
     }
     
     eliminar(codigo) {
-        let encontrado = false;
-        this.productos.forEach((producto, index) => {
-            if(producto.codigo == codigo) {
-                encontrado = true
-            }
-            if(encontrado) {
-                this.productos[index] = this.productos[index + 1]
-            }
-        })
-        if(encontrado == true) {
-            this.productos.pop()
+        let ubi = buscar(this.productos, codigo); //el eliminar depende de mi busqueda binaria que esta mal.
+        let length = this.productos.length
+        let i = 0
+    
+        while( i + ubi < length) {
+            this.productos[ubi + i] = this.productos[ubi + i + 1]
+            i++
         }
+    
+        this.productos.length -= 1;
+    
+        return this.productos;
     }
    
     buscar(codigo) {
-
-        for (let i = 0; i < this.productos.length; i++) {
-            if (this.productos[i].codigo == codigo) {
-             return this.productos[i]
+        let bajo = 0;    
+        let alto = this.productos.length - 1;   
+        let position = -1;
+        let encontrado = false;
+        let mitad;
+     
+        while (encontrado === false && bajo <= alto) {
+            mitad = Math.floor((bajo + alto)/2);
+            if (this.productos[mitad] == codigo) {
+                encontrado = true;
+                position = mitad;
+            } else if (this.productos[mitad] > codigo) {  
+                alto = mitad - 1;
+            } else {  
+                bajo = mitad + 1;
             }
-           
         }
-
+        return position; //si esta linea de aqui se queda así, no me arroja el numero a buscar
+        // pero no necesito el operador "?" en la linea 40, si cambio cualquier cosa en este
+        // return position; necesito el operador si o si. ademas no se como obtener mi numero
+        // que busco por codigo
     }
 
     listarInverso() {
@@ -67,6 +95,7 @@ class Inventario {
             mostrarInventario(this.productos[i])
         }
     }
+     
 }
 const inventario = new Inventario();
 
@@ -75,6 +104,16 @@ btListar.addEventListener("click", listarProductos) //funcion onclick del boton 
 btEliminar.addEventListener("click", eliminarProducto) //funcion onclick del boton eliminar
 btBuscar.addEventListener("click", buscarProducto) //funcion onclick del boton eliminar
 btListarInverso.addEventListener("click", listarInverso) //funcion onclick del boton eliminar
+
+
+function metodoAdd() {
+    let ubi = ubicacion(this.productos, codigo);
+    for (let i = this.productos.length - 1; ubi <= i; i--) {
+        this.productos[i + 1] = this.productos[i]
+    }
+    this.productos[ubi] = codigo;
+    return this.productos;
+}
 
 function LimpiarIn() {
     txt.innerHTML = ''; //limpia la lista del HTML
