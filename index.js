@@ -20,82 +20,122 @@ class Producto {
         this.nombre = nombre;
         this.costo = costo;
         this.cantidad = cantidad;
+        this.next = null;
        }
     }
 class Inventario {
     constructor() {
-        this.productos = []
-    }
-    ubicacion(codigo) {
-        let i = 0;
-        while ( codigo > this.productos[i]?.codigo) {
-            i++
-        }
-        return i
-    }
-    agregar(productoNuevo) {
-        //let ubi = this.ubicacion(productoNuevo?.codigo); esto así me lo acomoda por orden
-        // leí que te deja leer los valores de la propiedad en una cadena de objetos sin tener que
-        //validar cada referencia, si no se lo pongo me los añadé tal cual.
-        let ubi = this.ubicacion(productoNuevo.codigo);
-        for (let i = this.productos.length - 1; ubi <= i; i--) {
-            this.productos[i + 1] = this.productos[i]
-        }
-        this.productos[ubi] = productoNuevo;
-        console.log(this.productos);
+        this.primero = null;
+        this.size=0;
     }
 
-    listar(){
-        this.productos.forEach(producto =>{
-            mostrarInventario(producto)
-        }) //Destructuring; saca los valores para usarlos individualmentes
-    }
-    
-    eliminar(codigo) {
-        let ubi = buscar(this.productos, codigo); //el eliminar depende de mi busqueda binaria que esta mal.
-        let length = this.productos.length
-        let i = 0
-    
-        while( i + ubi < length) {
-            this.productos[ubi + i] = this.productos[ubi + i + 1]
-            i++
+    add(codigo){
+        const newProducto = new Producto(codigo, null)
+        if (!this.primero){
+            this.primero = newProducto
+        } else { 
+            let actual = this.primero;
+            while (actual.next){
+                actual=actual.next;
+            };
+            actual.next = newProducto;
+        };
+        this.size++;
+    };
+    addAt(codigo, index){
+        if(index < 0 || index > this.size){
+            return null;
+        };
+        const newProducto = new Producto(codigo);
+        let actual = this.primero;
+        let previous;
+
+        if(index == 0){
+            newProducto.next = actual;
+            this.head = newProducto;
+        } else { 
+            for (let i = 0; i<index; i++) {
+                previous = actual;
+                actual = actual.next;
+            };
+            newProducto.next= actual;
+            previous.next= newProducto;
+        };
+    this.size++
+    };
+    print(nuevo){
+        if (this.primero==null)
+          this.primero=nuevo;
+        else{
+          let temp=this.primero;
+          while (temp.next!=null)
+            temp=temp.next;
+          temp.next=nuevo;
         }
-    
-        this.productos.length -= 1;
-    
-        return this.productos;
-    }
-   
-    buscar(codigo) {
-        let bajo = 0;    
-        let alto = this.productos.length - 1;   
-        let position = -1;
-        let encontrado = false;
-        let mitad;
-     
-        while (encontrado === false && bajo <= alto) {
-            mitad = Math.floor((bajo + alto)/2);
-            if (this.productos[mitad] == codigo) {
-                encontrado = true;
-                position = mitad;
-            } else if (this.productos[mitad] > codigo) {  
-                alto = mitad - 1;
-            } else {  
-                bajo = mitad + 1;
+      }
+    listarInverso(){
+        let temp = this.primero;
+        let str = "";
+        while(!!temp){
+            str =  temp.codigo + "" + str;
+            temp = temp.next;  
+        }
+        str += null;
+        return str;
+    };
+    removeCode(codigo){
+        let actual = this.primero;
+        let previous = null;
+
+        while(actual != null){
+            if(actual.codigo === codigo){
+                if(!previous){
+                    this.primero = actual.next;
+                } else { 
+                    previous.next = actual.next;
+                };
+                this.size--;
+                return actual.codigo;
+            };
+            previous = actual;
+            actual = actual.next;
+        };
+        return null;
+    };
+    removeIndex(index){
+        if(index < 0 || index >= this.size){
+            return null;
+        }
+        let actual = this.primero;
+        let previous = null;
+
+        if(index === 0){
+            this.head = actual.next;
+        } else{
+            for (let i = 0; i<index; i++) {
+                previous = actual;
+                actual = actual.next;
+            };
+            previous.next = actual.next;
+
+        };
+        this.size--;
+        return actual.codigo;
+    };
+    findIndex(codigo) {
+        let lastIndex = this.size - 1;
+        let actual = this.primero;
+        let i;
+        for (i = 0; i <= lastIndex; i++){
+            if(i == codigo){
+                return actual;
+            } else { 
+                actual = actual.next;
             }
         }
-        return position; //si esta linea de aqui se queda así, no me arroja el numero a buscar
-        // pero no necesito el operador "?" en la linea 40, si cambio cualquier cosa en este
-        // return position; necesito el operador si o si. ademas no se como obtener mi numero
-        // que busco por codigo
-    }
-
-    listarInverso() {
-        for(let i = this.productos.length - 1; i >= 0; i--){
-            mostrarInventario(this.productos[i])
-        }
-    }
-     
+        return actual;
+      }
+    
 }
 const inventario = new Inventario();
 
@@ -106,7 +146,7 @@ btBuscar.addEventListener("click", buscarProducto) //funcion onclick del boton e
 btListarInverso.addEventListener("click", listarInverso) //funcion onclick del boton eliminar
 
 
-function metodoAdd() {
+function metodoAdd(codigo) {
     let ubi = ubicacion(this.productos, codigo);
     for (let i = this.productos.length - 1; ubi <= i; i--) {
         this.productos[i + 1] = this.productos[i]
@@ -120,8 +160,8 @@ function LimpiarIn() {
 }
 
 function agregarr(){                //agregar el producto
-    const producto = new Producto(codigoIn.value, nombreIn.value, costoIn.value, cantidadIn.value); //selecciono el valor de los input
-    inventario.agregar(producto);
+    const producto = new Producto(Number(codigoIn.value), nombreIn.value, costoIn.value, cantidadIn.value); //selecciono el valor de los input
+    inventario.add(producto);
 }
 
 function mostrarInventario(producto) { 
@@ -132,17 +172,18 @@ function mostrarInventario(producto) {
 
 function listarProductos() {
     LimpiarIn();                    //LimpiarIn
-    inventario.listar();            //listar productos
+    inventario.print();            //listar productos
 }
 
 function eliminarProducto() {
-    inventario.eliminar(codigoIn.value)    //eliminar producto
+    inventario.removeCode(codigoIn.value)    //eliminar producto
 }
 
 function buscarProducto() {
-    const productoEncontrado = inventario.buscar(codigoIn.value);
+    let codigo = Number(document.getElementById("codigo").value);
+    const productoEncontrado = inventario.findIndex(codigo);
     if(productoEncontrado) {
-        const {codigo, nombre, costo, cantidad} = productoEncontrado;   //Destructuring, pega el valor encontrado en otro parrafo
+        const {codigo, nombre, costo, cantidad} = productoEncontrado  ;   //Destructuring, pega el valor encontrado en otro parrafo
         codigoE.innerHTML = `<h4> Producto Encontrado:</h4><br> Codigo: ${codigo} 
         Nombre: ${nombre} Costo: ${costo} Cantidad: ${cantidad} <br>`
     }
