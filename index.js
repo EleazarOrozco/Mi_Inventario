@@ -21,139 +21,147 @@ class Producto {
         this.costo = costo;
         this.cantidad = cantidad;
         this.next = null;
+        this.prev = null;
        }
+
+       
+
     }
 class Inventario {
     constructor() {
         this.primero = null;
+        this.ultimo = null;
         this.size=0;
     }
 
-    add(codigo){
-        const newProducto = new Producto(codigo, null)
-        if (!this.primero){
-            this.primero = newProducto
-        } else { 
-            let actual = this.primero;
-            while (actual.next){
-                actual=actual.next;
-            };
-            actual.next = newProducto;
-        };
+    pushOrdered(newItem){
+        if (this.primero == null){
+            this.primero = newItem;
+        }
+        else if (this.primero.codigo >= newItem.codigo){
+            newItem.next = this.primero;
+            newItem.next.prev = newItem;
+            this.primero = newItem;
+        } else {
+            let current = this.primero;
+            while(current.next && current.next.codigo < newItem.codigo){
+                current = current.next;
+            }
+            newItem.next = current.next;
+            if(current.next){
+                newItem.next.prev = newItem;
+            }
+            current.next = newItem;
+            newItem.prev = current;
+        }
         this.size++;
-    };
-    addAt(codigo, index){
-        if(index < 0 || index > this.size){
-            return null;
+        // console.log(this.primero.next); //lo puse para ver si estaba funcionando y efectivamente funciona
+    }
+    
+    headRemove() {
+        if (!this.primero) {
+            return null
         };
-        const newProducto = new Producto(codigo);
-        let actual = this.primero;
-        let previous;
 
-        if(index == 0){
-            newProducto.next = actual;
-            this.head = newProducto;
-        } else { 
-            for (let i = 0; i<index; i++) {
-                previous = actual;
-                actual = actual.next;
-            };
-            newProducto.next= actual;
-            previous.next= newProducto;
-        };
-    this.size++
-    };
-    print(nuevo){
-        if (this.primero==null)
-          this.primero=nuevo;
-        else{
-          let temp=this.primero;
-          while (temp.next!=null)
-            temp=temp.next;
-          temp.next=nuevo;
-        }
-      }
-    listarInverso(){
-        let temp = this.primero;
-        let str = "";
-        while(!!temp){
-            str =  temp.codigo + "" + str;
-            temp = temp.next;  
-        }
-        str += null;
-        return str;
-    };
-    removeCode(codigo){
-        let actual = this.primero;
-        let previous = null;
-
-        while(actual != null){
-            if(actual.codigo === codigo){
-                if(!previous){
-                    this.primero = actual.next;
-                } else { 
-                    previous.next = actual.next;
-                };
-                this.size--;
-                return actual.codigo;
-            };
-            previous = actual;
-            actual = actual.next;
-        };
-        return null;
-    };
-    removeIndex(index){
-        if(index < 0 || index >= this.size){
-            return null;
-        }
-        let actual = this.primero;
-        let previous = null;
-
-        if(index === 0){
-            this.head = actual.next;
-        } else{
-            for (let i = 0; i<index; i++) {
-                previous = actual;
-                actual = actual.next;
-            };
-            previous.next = actual.next;
-
+        if (this.primero === this.ultimo) {
+            this.primero = null;
+            this.ultimo = null;
+        } else {
+            this.primero = this.primero.next;
+            this.primero.prev = null;
         };
         this.size--;
-        return actual.codigo;
+    }
+
+    lastRemove() {
+        if (!this.ultimo) {
+            return null
+        };
+
+        if (this.primero === this.ultimo) {
+            this.primero = null;
+            this.ultimo = null;
+        } else {
+            this.ultimo = this.ultimo.prev;
+            this.ultimo.next = null;
+        };
+        this.size--;
     };
-    findIndex(codigo) {
-        let lastIndex = this.size - 1;
-        let actual = this.primero;
-        let i;
-        for (i = 0; i <= lastIndex; i++){
-            if(i == codigo){
-                return actual;
-            } else { 
-                actual = actual.next;
-            }
+
+    removeData(newItem) {
+        let current = this.primero;
+        let previous = null;
+
+        while(current !== null) {
+            if (current.codigo === newItem) {
+                if (!previous) {
+                    this.headRemove();
+                } else if (!current.next) {
+                    this.lastRemove();
+                } else {
+                    previous.next = current.next;
+                    current.next.prev = previous;
+                };
+                this.size--;
+                return current.codigo;
+            };
+            previous = current;
+            current = current.next;
+        };
+        return null;
+    }
+
+    // print() {
+    //     let current = this.primero;
+    //     let result = '';
+    //     while(current) {
+    //         result += current.codigo + ' <-> ';
+    //         current = current.next;
+    //     };
+
+    //     return result += 'null ';
+    // };
+
+    reverse(){
+        let temp = null;
+        let current = this.primero;
+        while(current != null) {
+            temp = current.next;
+            current.next = current.prev;
+            current.prev = temp;
+            current = current.next;
         }
-        return actual;
+        if (temp != null){
+            this.primero = temp.next;
+        }
+        return this.primero;
+    }
+
+    print() {
+       let temp = null;
+        let current = this.ultimo;
+        while(current != null) {
+            temp = current.prev;
+            current.prev = current.next;
+            current.next = temp;
+            current = current.prev;
+        }
+        if (temp != null){
+            this.primero = temp.prev;
+        }
+        // return this.primero;
+        console.log(this.primero)
       }
-    
 }
 const inventario = new Inventario();
 
 btIngresar.addEventListener("click", agregarr) //funcion onclick del boton agregar
-btListar.addEventListener("click", listarProductos) //funcion onclick del boton listar
+btListar.addEventListener("click", mostrarInventario) //funcion onclick del boton listar
 btEliminar.addEventListener("click", eliminarProducto) //funcion onclick del boton eliminar
 btBuscar.addEventListener("click", buscarProducto) //funcion onclick del boton eliminar
 btListarInverso.addEventListener("click", listarInverso) //funcion onclick del boton eliminar
 
 
-function metodoAdd(codigo) {
-    let ubi = ubicacion(this.productos, codigo);
-    for (let i = this.productos.length - 1; ubi <= i; i--) {
-        this.productos[i + 1] = this.productos[i]
-    }
-    this.productos[ubi] = codigo;
-    return this.productos;
-}
 
 function LimpiarIn() {
     txt.innerHTML = ''; //limpia la lista del HTML
@@ -161,7 +169,7 @@ function LimpiarIn() {
 
 function agregarr(){                //agregar el producto
     const producto = new Producto(Number(codigoIn.value), nombreIn.value, costoIn.value, cantidadIn.value); //selecciono el valor de los input
-    inventario.add(producto);
+    inventario.pushOrdered(producto);
 }
 
 function mostrarInventario(producto) { 
@@ -176,7 +184,7 @@ function listarProductos() {
 }
 
 function eliminarProducto() {
-    inventario.removeCode(codigoIn.value)    //eliminar producto
+    inventario.removeData(codigoIn.value)    //eliminar producto
 }
 
 function buscarProducto() {
@@ -191,5 +199,5 @@ function buscarProducto() {
 
 function listarInverso() {
     LimpiarIn();
-    inventario.listarInverso()
+    inventario.reverse()
 }
